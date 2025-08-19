@@ -6,10 +6,6 @@
     });
 
     // index.js
-    addEventListener("fetch", (event) => {
-        event.respondWith(handleRequest(event.request, event.env));
-    });
-
 
 
     var ARTING_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo4OTE2MSwiZXhwIjoxNzU2MDI2OTgxfQ.rkTVuPCz5b7icxAKKCrd3j3ZCSqm5F9adRgtUQRFWy4";
@@ -724,10 +720,9 @@
         return SESSIONS.get(key);
     }
     __name(ensureSession, "ensureSession");
-    async function handleRequest(request, env) {
+    async function handleRequest(request, env, ctx) {
         const url = new URL(request.url);
         const pathname = url.pathname;
-        console.log("ENV KEYS:", Object.keys(env));
         if (request.method === "OPTIONS") {
             return new Response(null, {
                 status: 204,
@@ -904,6 +899,14 @@
             });
         }
     }
+
+    export default {
+        async fetch(request, env, ctx) {
+            return handleRequest(request, env, ctx);
+        }
+    }
+
+
     __name(handleRequest, "handleRequest");
     async function handleTelegramMessage(botToken, message) {
         const chatId = message.chat.id;
