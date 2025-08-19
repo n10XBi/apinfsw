@@ -1,0 +1,14 @@
+name = "kv-api-worker"
+main = "index.js"
+compatibility_date = "2025-08-13"
+
+# KV Binding
+[[kv_namespaces]]
+binding = "Gen-api-txt2img"
+id = "53d2165ec1e8432ba43112c1b1b78f64"     
+preview_id = "53d2165ec1e8432ba43112c1b1b78f64"  
+
+# Variable binding
+[vars]
+TELEGRAM_TOKEN = "7887377557:AAFT0ZXqz0igQynxg-cO35TIsLcLgmpqv9A"
+ADMIN_ID = "8196980814"
