@@ -3,6 +3,7 @@ main = "index.js"
 compatibility_date = "2025-08-17"
 compatibility_flags = ["nodejs_compat"]
 type = "javascript"
+build.upload.format = "modules"
 
 # KV Binding
 [[kv_namespaces]]
