@@ -727,6 +727,7 @@
     async function handleRequest(request, env) {
         const url = new URL(request.url);
         const pathname = url.pathname;
+        console.log("ENV KEYS:", Object.keys(env));
         if (request.method === "OPTIONS") {
             return new Response(null, {
                 status: 204,
