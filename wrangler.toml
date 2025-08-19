@@ -5,6 +5,10 @@ compatibility_date = "2025-08-17"
 # Tambahin ini kalau perlu fitur Node.js (opsional, tapi aman)
 compatibility_flags = ["nodejs_compat"]
 
+[build]
+upload.format = "modules"
+
+
 # KV Binding
 [[kv_namespaces]]
 binding = "Gen-api-txt2img"
