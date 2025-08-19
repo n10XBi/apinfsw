@@ -1,6 +1,8 @@
-name = "kv-api-worker"
+name = "apitestkeyv1"
 main = "index.js"
-compatibility_date = "2025-08-13"
+compatibility_date = "2025-08-17"
+compatibility_flags = ["nodejs_compat"]
+type = "javascript"
 
 # KV Binding
 [[kv_namespaces]]
