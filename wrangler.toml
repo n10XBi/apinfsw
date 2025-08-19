@@ -1,9 +1,9 @@
 name = "apitestkeyv1"
 main = "index.js"
 compatibility_date = "2025-08-17"
+
+# Tambahin ini kalau perlu fitur Node.js (opsional, tapi aman)
 compatibility_flags = ["nodejs_compat"]
-type = "javascript"
-build.upload.format = "modules"
 
 # KV Binding
 [[kv_namespaces]]
