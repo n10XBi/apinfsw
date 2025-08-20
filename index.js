@@ -359,37 +359,97 @@ function buildClipSkipKeyboard() {
   rows.push([{ text: "Kembali", callback_data: "show_settings" }]);
   return { reply_markup: { inline_keyboard: rows } };
 }
+const authHeader = request.headers.get("Authorization");
+let apiKey = null;
+
+if (authHeader && authHeader.startsWith("Bearer ")) {
+  apiKey = authHeader.substring(7).trim();
+} else {
+  apiKey = request.headers.get("x-api-key");
+}
+
+if (!apiKey) {
+  return {
+    ok: false,
+    res: new Response(JSON.stringify({ error: "Missing API key" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json", ...corsHeaders() }
+    })
+  };
+}
 
 // ======= AUTH (KV) =======
 async function validateApiKey(env, request, url) {
   // Bypass untuk Telegram routes
   if (url.pathname.startsWith("/telegram/")) return { ok: true };
 
-  const key = request.headers.get("x-api-key") || url.searchParams.get("key");
+  const authHeader = request.headers.get("Authorization");
+  let key = null;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    key = authHeader.substring(7).trim();
+  } else {
+    key = request.headers.get("x-api-key") || url.searchParams.get("key");
+  }
+
   if (!key) {
-    return { ok: false, res: new Response(JSON.stringify({ error: "Missing API key" }), { status: 401, headers: corsHeaders() }) };
+    return {
+      ok: false,
+      res: new Response(JSON.stringify({ error: "Missing API key" }), {
+        status: 401,
+        headers: corsHeaders()
+      })
+    };
   }
 
   const KV = getKVFromEnv(env);
   if (!KV) {
-    return { ok: false, res: new Response(JSON.stringify({ error: "KV binding Gen-api-txt2img not found" }), { status: 500, headers: corsHeaders() }) };
+    return {
+      ok: false,
+      res: new Response(JSON.stringify({ error: "KV binding Gen-api-txt2img not found" }), {
+        status: 500,
+        headers: corsHeaders()
+      })
+    };
   }
 
   const raw = await KV.get(key);
   if (!raw) {
-    return { ok: false, res: new Response(JSON.stringify({ error: "Invalid API key" }), { status: 403, headers: corsHeaders() }) };
+    return {
+      ok: false,
+      res: new Response(JSON.stringify({ error: "Invalid API key" }), {
+        status: 403,
+        headers: corsHeaders()
+      })
+    };
   }
 
   let rec;
   try { rec = JSON.parse(raw); } catch (e) { rec = {}; }
 
   if (rec.revoked) {
-    return { ok: false, res: new Response(JSON.stringify({ error: "API key revoked" }), { status: 403, headers: corsHeaders() }) };
+    return {
+      ok: false,
+      res: new Response(JSON.stringify({ error: "API key revoked" }), {
+        status: 403,
+        headers: corsHeaders()
+      })
+    };
   }
 
-  if (typeof rec.usage === 'number' && typeof rec.limit === 'number' && rec.usage >= rec.limit) {
-    return { ok: false, res: new Response(JSON.stringify({ error: "API limit exceeded" }), { status: 429, headers: corsHeaders() }) };
+  if (typeof rec.usage === "number" && typeof rec.limit === "number" && rec.usage >= rec.limit) {
+    return {
+      ok: false,
+      res: new Response(JSON.stringify({ error: "API limit exceeded" }), {
+        status: 429,
+        headers: corsHeaders()
+      })
+    };
   }
+
+  return { ok: true, key, rec, KV };
+}
+
 
   // Increment usage (best-effort)
   try {
