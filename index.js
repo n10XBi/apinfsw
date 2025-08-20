@@ -461,7 +461,7 @@ async function validateApiKey(env, request, url) {
   }
 
   return { ok: true, rec };
-}
+
 
 // ======= TELEGRAM HANDLERS =======
 async function handleTelegramMessage(botToken, message, env) {
