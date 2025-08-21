@@ -132,15 +132,18 @@ async function generateImageArting(payload, env) {
 }
 
 async function getImageResultArting(request_id) {
+  // 🔥 langsung hardcode token
+  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo4OTE2MSwiZXhwIjoxNzU2MDI2OTgxfQ.rkTVuPCz5b7icxAKKCrd3j3ZCSqm5F9adRgtUQRFWy4";
+
   const url = "https://api.arting.ai/api/cg/text-to-image/get";
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: ARTING_TOKEN, // ✅ sama, langsung hardcode
+      "Authorization": token,
       "Content-Type": "application/json",
-      Accept: "application/json",
+      "Accept": "application/json"
     },
-    body: JSON.stringify({ request_id }),
+    body: JSON.stringify({ request_id })
   });
 
   if (!res.ok) {
@@ -149,13 +152,15 @@ async function getImageResultArting(request_id) {
   }
 
   const data = await res.json();
+
   return {
     status: data.code === 100000 ? "done" : "pending",
     request_id,
     images: data.data?.output || [],
-    raw: data,
+    raw: data
   };
 }
+
 
 async function pollImageResultArting(request_id, env, { timeout = 180000, interval = 4000 } = {}) {
   const start = Date.now();
