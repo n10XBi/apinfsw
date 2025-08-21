@@ -774,44 +774,55 @@ async function handleRequest(request, env, ctx) {
   const auth = await validateApiKey(env, request, url);
   if (!auth.ok) return auth.res;
 
-  const request_id = url.searchParams.get("request_id") || (await request.json().catch(() => ({}))).request_id;
+  const request_id =
+    url.searchParams.get("request_id") ||
+    (await request.json().catch(() => ({}))).request_id;
+
   if (!request_id) {
     return new Response(
       JSON.stringify({ error: "Missing request_id" }),
-      { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders() } }
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders() },
+      }
     );
   }
 
   try {
-    const result = await pollImageResultArting(request_id, env);
+    // 🔥 Versi lama: langsung call Arting API untuk cek status
+    const resp = await fetch(`https://api.arting.ai/result/${request_id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${env.ARTING_KEY}`, // pastikan sudah ada di wrangler.toml/env
+      },
+    });
 
-    if (!result) {
+    if (!resp.ok) {
+      const txt = await resp.text();
       return new Response(
-        JSON.stringify({ status: "pending", message: "Image not ready yet, coba lagi sebentar" }),
-        { status: 202, headers: { "Content-Type": "application/json", ...corsHeaders() } }
+        JSON.stringify({ error: "Arting API error", details: txt }),
+        { status: resp.status, headers: { "Content-Type": "application/json", ...corsHeaders() } }
       );
     }
 
-    return new Response(
-      JSON.stringify({
-        status: "done",
-        request_id,
-        images: result.images || [],
-        info: result.info || {}
-      }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders() } }
-    );
+    const data = await resp.json();
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders() },
+    });
   } catch (err) {
     return new Response(
       JSON.stringify({
         status: "failed",
         request_id,
-        error: err.message || "Unknown error"
+        error: err.message || "Unknown error",
       }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders() } }
     );
   }
 }
+
 
 
     if (pathname.startsWith("/telegram/")) {
