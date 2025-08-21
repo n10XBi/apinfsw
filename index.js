@@ -813,7 +813,7 @@ if (pathname === "/get_result") {
     const res = await fetch("https://api.arting.ai/api/cg/text-to-image/get", {
       method: "POST",
       headers: {
-        "Authorization": env.ARTING_TOKEN, // jangan lupa simpan di wrangler.toml
+        "Authorization": ARTING_TOKEN, // jangan lupa simpan di wrangler.toml
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
