@@ -112,18 +112,22 @@ async function generateImageArting(payload, env) {
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: token,
+      Authorization: ARTING_TOKEN,
       "Content-Type": "application/json",
       Accept: "application/json"
     },
     body: JSON.stringify(payload)
   });
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to generate image, status ${res.status}: ${text}`);
   }
+
   const data = await res.json();
-  if (data.code === 100000 && data.data && data.data.request_id) return data.data.request_id;
+  if (data.code === 100000 && data.data?.request_id) {
+    return data.data.request_id;
+  }
   throw new Error(`API error: ${data.message || "Unknown error"}`);
 }
 
@@ -132,26 +136,44 @@ async function getImageResultArting(request_id, env) {
   const url = "https://api.arting.ai/api/cg/text-to-image/get";
   const res = await fetch(url, {
     method: "POST",
-    headers: { Authorization: token, "Content-Type": "application/json", Accept: "application/json" },
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
     body: JSON.stringify({ request_id })
   });
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to get image result, status ${res.status}: ${text}`);
   }
+
   const data = await res.json();
-  return data?.data?.output || null;
+
+  // 🔥 return lengkap
+  return {
+    status: data.code === 100000 ? "done" : "pending",
+    request_id,
+    images: data.data?.output || [],
+    raw: data
+  };
 }
 
 async function pollImageResultArting(request_id, env, { timeout = 180000, interval = 4000 } = {}) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
-    const output = await getImageResultArting(request_id, env);
-    if (output && output.length > 0) return output;
+    const result = await getImageResultArting(request_id, env);
+
+    if (result.images && result.images.length > 0) {
+      return result; // ✅ return object lengkap, bukan array doang
+    }
+
     await wait(interval);
   }
   throw new Error("Timeout reached, image not ready yet. Coba lagi ya, duniakuu 🥺");
 }
+
 
 // ======= SESSIONS =======
 function getSessionKey(botToken, chatId) { return `${botToken}::${chatId}`; }
