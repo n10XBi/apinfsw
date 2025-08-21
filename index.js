@@ -132,16 +132,16 @@ async function generateImageArting(payload, env) {
 }
 
 async function getImageResultArting(request_id, env) {
-  const token = (env && env.ARTING_TOKEN) || ARTING_TOKEN;
+  const token = (env && env.ARTING_TOKEN) || ARTING_TOKEN; // fallback
   const url = "https://api.arting.ai/api/cg/text-to-image/get";
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: token,
+      Authorization: token,  // ✅ pakai token, bukan ARTING_TOKEN
       "Content-Type": "application/json",
-      Accept: "application/json"
+      Accept: "application/json",
     },
-    body: JSON.stringify({ request_id })
+    body: JSON.stringify({ request_id }),
   });
 
   if (!res.ok) {
