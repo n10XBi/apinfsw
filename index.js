@@ -137,7 +137,7 @@ async function getImageResultArting(request_id, env) {
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: token,
+      Authorization: ARTING_TOKEN,
       "Content-Type": "application/json",
       Accept: "application/json"
     },
