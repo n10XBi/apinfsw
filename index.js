@@ -168,13 +168,14 @@ async function pollImageResultArting(request_id, env, { timeout = 180000, interv
     const result = await getImageResultArting(request_id, env);
 
     if (result.images && result.images.length > 0) {
-      return result; // ✅ return object lengkap, bukan array doang
+      return result; // ✅ sudah ada link gambar
     }
 
     await wait(interval);
   }
   throw new Error("Timeout reached, image not ready yet. Coba lagi ya, duniakuu 🥺");
 }
+
 
 
 // ======= SESSIONS =======
@@ -831,16 +832,16 @@ if (pathname === "/get_result") {
       );
     }
 
-    const data = await resp.json();
-return new Response(JSON.stringify({
-  status: data.code === 100000 ? "done" : "pending",
+    const data = await res.json();
+const images = data?.data?.output || [];
+
+return {
+  status: images.length > 0 ? "done" : "pending",  // 🔥 jangan done kalau kosong
   request_id,
-  images: data?.data?.output || [],  // <== ini langsung link array
+  images,
   raw: data
-}), {
-  status: 200,
-  headers: { "Content-Type": "application/json", ...corsHeaders() }
-});
+};
+
 
   } catch (err) {
     return new Response(
