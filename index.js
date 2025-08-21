@@ -771,16 +771,48 @@ async function handleRequest(request, env, ctx) {
     }
 
     if (pathname === "/get_result") {
-      const auth = await validateApiKey(env, request, url);
-      if (!auth.ok) return auth.res;
+  const auth = await validateApiKey(env, request, url);
+  if (!auth.ok) return auth.res;
 
-      const request_id = url.searchParams.get("request_id");
-      if (!request_id) {
-        return new Response(JSON.stringify({ error: "Missing request_id" }), { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders() } });
-      }
-      const images = await pollImageResultArting(request_id, env);
-      return new Response(JSON.stringify({ images }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders() } });
+  const request_id = url.searchParams.get("request_id") || (await request.json().catch(() => ({}))).request_id;
+  if (!request_id) {
+    return new Response(
+      JSON.stringify({ error: "Missing request_id" }),
+      { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders() } }
+    );
+  }
+
+  try {
+    const result = await pollImageResultArting(request_id, env);
+
+    if (!result) {
+      return new Response(
+        JSON.stringify({ status: "pending", message: "Image not ready yet, coba lagi sebentar" }),
+        { status: 202, headers: { "Content-Type": "application/json", ...corsHeaders() } }
+      );
     }
+
+    return new Response(
+      JSON.stringify({
+        status: "done",
+        request_id,
+        images: result.images || [],
+        info: result.info || {}
+      }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders() } }
+    );
+  } catch (err) {
+    return new Response(
+      JSON.stringify({
+        status: "failed",
+        request_id,
+        error: err.message || "Unknown error"
+      }),
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders() } }
+    );
+  }
+}
+
 
     if (pathname.startsWith("/telegram/")) {
       if (request.method !== "POST") return new Response("ok", { status: 200 });
