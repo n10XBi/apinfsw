@@ -832,15 +832,16 @@ if (pathname === "/get_result") {
     }
 
     const data = await resp.json();
-    return new Response(JSON.stringify({
-      status: data.code === 100000 ? "done" : "pending",
-      request_id,
-      images: data?.data?.output || [],
-      raw: data
-    }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders() }
-    });
+return new Response(JSON.stringify({
+  status: data.code === 100000 ? "done" : "pending",
+  request_id,
+  images: data?.data?.output || [],  // <== ini langsung link array
+  raw: data
+}), {
+  status: 200,
+  headers: { "Content-Type": "application/json", ...corsHeaders() }
+});
+
   } catch (err) {
     return new Response(
       JSON.stringify({ status: "failed", request_id, error: err.message || "Unknown error" }),
