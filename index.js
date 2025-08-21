@@ -112,7 +112,7 @@ async function generateImageArting(payload, env) {
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: ARTING_TOKEN,
+      Authorization: token,
       "Content-Type": "application/json",
       Accept: "application/json"
     },
@@ -137,7 +137,7 @@ async function getImageResultArting(request_id, env) {
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: ARTING_TOKEN,
+      Authorization: token,
       "Content-Type": "application/json",
       Accept: "application/json"
     },
