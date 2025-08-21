@@ -770,59 +770,62 @@ async function handleRequest(request, env, ctx) {
       return new Response(JSON.stringify({ request_id }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders() } });
     }
 
-    if (pathname === "/get_result") {
+if (pathname === "/get_result") {
   const auth = await validateApiKey(env, request, url);
   if (!auth.ok) return auth.res;
 
-  const request_id =
-    url.searchParams.get("request_id") ||
-    (await request.json().catch(() => ({}))).request_id;
+  const body = await request.json().catch(() => ({}));
+  const request_id = url.searchParams.get("request_id") || body.request_id;
 
   if (!request_id) {
     return new Response(
       JSON.stringify({ error: "Missing request_id" }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders() },
-      }
+      { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders() } }
     );
   }
 
   try {
-    // 🔥 Versi lama: langsung call Arting API untuk cek status
-    const resp = await fetch(`https://api.arting.ai/result/${request_id}`, {
-      method: "GET",
+    // 🔥 Versi lama: POST ke /api/cg/text-to-image/get
+    const res = await fetch("https://api.arting.ai/api/cg/text-to-image/get", {
+      method: "POST",
       headers: {
+        "Authorization": env.ARTING_TOKEN, // jangan lupa simpan di wrangler.toml
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${env.ARTING_KEY}`, // pastikan sudah ada di wrangler.toml/env
+        "Accept": "application/json"
       },
+      body: JSON.stringify({ request_id })
     });
 
-    if (!resp.ok) {
-      const txt = await resp.text();
+    if (!res.ok) {
+      const text = await res.text();
       return new Response(
-        JSON.stringify({ error: "Arting API error", details: txt }),
-        { status: resp.status, headers: { "Content-Type": "application/json", ...corsHeaders() } }
+        JSON.stringify({ error: "Arting API error", details: text }),
+        { status: res.status, headers: { "Content-Type": "application/json", ...corsHeaders() } }
       );
     }
 
-    const data = await resp.json();
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders() },
-    });
+    const data = await res.json();
+    // response arting biasanya { data: { output: [...] } }
+    return new Response(
+      JSON.stringify({
+        status: "done",
+        request_id,
+        images: data?.data?.output || [],
+        raw: data
+      }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders() } }
+    );
   } catch (err) {
     return new Response(
       JSON.stringify({
         status: "failed",
         request_id,
-        error: err.message || "Unknown error",
+        error: err.message || "Unknown error"
       }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders() } }
     );
   }
 }
-
 
 
     if (pathname.startsWith("/telegram/")) {
