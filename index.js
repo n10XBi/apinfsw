@@ -131,13 +131,12 @@ async function generateImageArting(payload, env) {
   throw new Error(`API error: ${data.message || "Unknown error"}`);
 }
 
-async function getImageResultArting(request_id, env) {
-  const token = (env && env.ARTING_TOKEN) || ARTING_TOKEN; // fallback
+async function getImageResultArting(request_id) {
   const url = "https://api.arting.ai/api/cg/text-to-image/get";
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: token,  // ✅ pakai token, bukan ARTING_TOKEN
+      Authorization: ARTING_TOKEN, // ✅ sama, langsung hardcode
       "Content-Type": "application/json",
       Accept: "application/json",
     },
@@ -150,13 +149,11 @@ async function getImageResultArting(request_id, env) {
   }
 
   const data = await res.json();
-
-  // 🔥 return lengkap
   return {
     status: data.code === 100000 ? "done" : "pending",
     request_id,
     images: data.data?.output || [],
-    raw: data
+    raw: data,
   };
 }
 
